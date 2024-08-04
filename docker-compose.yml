@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${AMQP_USER}
+      RABBITMQ_DEFAULT_PASS: ${AMQP_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - rabbitmq_network
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: scs_server
+    environment:
+      AMQP_HOST: ${AMQP_HOST}
+      AMQP_PORT: ${AMQP_PORT}
+      AMQP_USER: ${AMQP_USER}
+      AMQP_PASS: ${AMQP_PASS}
+      AMQP_QUEUE_NAME: ${AMQP_QUEUE_NAME}
+      PROCESSING_WORKERS_COUNT: ${PROCESSING_WORKERS_COUNT}
+    depends_on:
+      - rabbitmq
+    restart: always
+    networks:
+      - rabbitmq_network
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    container_name: scs_client
+    environment:
+      AMQP_HOST: ${AMQP_HOST}
+      AMQP_PORT: ${AMQP_PORT}
+      AMQP_USER: ${AMQP_USER}
+      AMQP_PASS: ${AMQP_PASS}
+      AMQP_QUEUE_NAME: ${AMQP_QUEUE_NAME}
+      PROCESSING_WORKERS_COUNT: ${PROCESSING_WORKERS_COUNT}
+    depends_on:
+      - rabbitmq
+      - server
+    restart: on-failure
+    networks:
+      - rabbitmq_network
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  rabbitmq_network:

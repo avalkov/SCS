@@ -1,0 +1,7 @@
+addItem('key1', 'val1')
+addItem('key2', 'val2')
+addItem('key3', 'val3')
+getItem('key1')
+deleteItem('key2')
+addItem('key4', 'val4')
+getAllItems()
